@@ -1,0 +1,45 @@
+name:           reflex-native-draggy
+version:        0.1.0.0
+synopsis:       Dragging example for Reflex Native
+author:         Confer Health
+maintainer:     se-operations@confer.health
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+homepage:       https://github.com/reflex-frp/reflex-native
+bug-reports:    https://github.com/reflex-frp/reflex-native/issues
+
+flag uikit
+  description: Build reflex-native-draggy-uikit
+  default: True
+
+library
+  default-language: Haskell2010
+  exposed-modules:
+    Reflex.Native.Examples.Draggy
+  hs-source-dirs: src
+  ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
+  ghc-prof-options: -fprof-auto
+  build-depends:
+      base
+    , reflex
+    , reflex-native
+    , vector-space == 0.10.*
+  if os(ios)
+    build-depends:
+      reflex-native-uikit
+    ghc-options: -optc-Wno-expansion-to-defined -optc-Wno-nullability-inferred-on-nested-type -optc-Wno-nullability-completeness-on-arrays -optc-Wno-nullability-completeness -optc-Wno-unknown-attributes
+
+executable reflex-native-draggy-uikit
+  if !flag(uikit) || !os(ios) || impl(ghcjs)
+    buildable: False
+  default-language: Haskell2010
+  hs-source-dirs: src-bin
+  ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2 -optc-Wno-expansion-to-defined -optc-Wno-nullability-inferred-on-nested-type -optc-Wno-nullability-completeness-on-arrays -optc-Wno-nullability-completeness -optc-Wno-unknown-attributes
+  main-is: uikit.hs
+  build-depends:
+      base
+    , reflex-native
+    , reflex-native-draggy
+    , reflex-native-uikit

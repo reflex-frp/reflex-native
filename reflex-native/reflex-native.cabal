@@ -1,0 +1,43 @@
+name:           reflex-native
+version:        0.1.0.0
+synopsis:       Cross platform layer for developing native Reflex apps
+description:    Provides a cross platform API for developing Reflex apps that are true native with no web views or javascript runtimes
+author:         Confer Health
+maintainer:     se-operations@confer.health
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+homepage:       https://github.com/reflex-frp/reflex-native
+bug-reports:    https://github.com/reflex-frp/reflex-native/issues
+
+library
+  default-language: Haskell2010
+  exposed-modules:
+      Reflex.Native
+      Reflex.Native.AdjustingBuilder
+      Reflex.Native.Color
+      Reflex.Native.Font
+      Reflex.Native.Geometry
+      Reflex.Native.Gesture
+      Reflex.Native.TextConfig
+      Reflex.Native.TextStyle
+      Reflex.Native.ViewBuilder.Class
+      Reflex.Native.ViewConfig
+      Reflex.Native.ViewLayout
+      Reflex.Native.ViewStyle
+  hs-source-dirs: src
+  ghc-options:
+      -Wall -fwarn-tabs -funbox-strict-fields -O2 -fspecialise-aggressively -ddump-simpl -ddump-to-file -dsuppress-coercions -dsuppress-idinfo
+  ghc-prof-options: -fprof-auto
+  build-depends:
+      base
+    , containers == 0.5.*
+    , dependent-map == 0.2.*
+    , dependent-sum >= 0.3 && < 0.5
+    , mtl >= 2.1 && < 2.3
+    , ref-tf == 0.4.*
+    , reflex
+    , text == 1.2.*
+    , transformers >= 0.3 && < 0.6
+    , vector-space == 0.10.*
