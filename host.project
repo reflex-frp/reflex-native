@@ -1,0 +1,8 @@
+packages:
+  examples/draggy/
+  reflex-native/
+package reflex-native
+  ghc-options: -Werror
+package reflex-native-draggy
+  ghc-options: -Werror
+

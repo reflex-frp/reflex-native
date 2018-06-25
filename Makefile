@@ -1,12 +1,22 @@
-platforms = host uikit android
+platforms = host ios android
 cabal_target ?= all
 cabal_files = $(shell find . -type f -a -name '*.cabal' | grep -v '^[.]/_build' | grep -v '^[.]/[.]')
 nix_files = default.nix $(shell find . -type f -a -name default.nix | grep -v '^[.]/_build' | grep -v '^[.]/[.]')
 
+# this hack is here to work around a shortcoming with cabal new-build where error and warning messages get output with paths that are relative to the package
+# being built, not the project root, and so vim (or similar) which try to parse those messages to allow quick navigation to the source line get bamboozled.
+# it's worse because at this position outside of cabal new-build it's hard to tell which package is currently being build, so we use heuristics by knowing
+# which modules hierarchies are in which packages. tl;dr:  :'(
+canonicalize_error_paths = sed \
+  -e 's,^src/Reflex/Native/Android,reflex-native-android/src/Reflex/Native/Android,g' \
+  -e 's,^src/Reflex/Native/Examples/Draggy,examples/draggy/src/Reflex/Native/Examples/Draggy,g' \
+  -e 's,^src/Reflex/Native/UIKit,reflex-native-uikit/src/Reflex/Native/UIKit,g' \
+  -e 's,^src/Reflex/Native,reflex-native/src/Reflex/Native,g'
+
 .PHONY: all clean $(platforms)
 
 $(platforms): %: _build/%/shell
-	_build/$*/shell cabal --project-file=$*.project --builddir=_build/$*/dist new-build $(cabal_target)
+	_build/$*/shell cabal --project-file=$*.project --builddir=_build/$*/dist new-build $(cabal_target) 2>&1 | $(canonicalize_error_paths)
 
 clean:
 	rm -rf _build
