@@ -51,7 +51,7 @@ type UIKitHost = SpiderHost Global
 type UIKitTimeline = Spider
 
 -- |The concrete type conforming to 'Reflex.Native.MonadNativeConstraints' that UIKit apps run in.
-type UIKitWidget x = PostBuildT UIKitTimeline (UIKitViewBuilderT UIKitTimeline (PerformEventT UIKitTimeline UIKitHost))
+type UIKitWidget = PostBuildT UIKitTimeline (UIKitViewBuilderT UIKitTimeline (PerformEventT UIKitTimeline UIKitHost))
 
 -- |How to run the underlying Reflex host monad 'UIKitHost' as an 'IO' action ('runSpiderHost').
 runUIKitHost :: UIKitHost a -> IO a
@@ -59,7 +59,7 @@ runUIKitHost = runSpiderHost
 
 -- |Run a @UIApplication@ using a generic app delegate which uses the given builder function to create and run the root view controller.
 {-# INLINABLE run #-}
-run :: (forall x. UIView -> UIKitWidget x ()) -> IO ()
+run :: (UIView -> UIKitWidget ()) -> IO ()
 run mkRootWidget = runGenericApplication config
   where
     config = (defaultAppDelegateConfig ())
