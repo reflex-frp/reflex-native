@@ -446,8 +446,12 @@ runUIKitViewBuilderT
      , SafeObjCoerce view UIViewType
      )
   => UIKitViewBuilderT t m a
+  -- ^The build action to run.
   -> ObjPtr view
+  -- ^The parent view to build views into, typically a new empty root @UIView@.
   -> Chan [DSum (EventTriggerRef t) TriggerInvocation]
+  -- ^The channel where asynchronous event triggers will be enqueued by the builder, usually handled by some asynchronous event firing thread which runs host
+  -- frames in response to batches of triggers.
   -> m (a, Env)
 runUIKitViewBuilderT (UIKitViewBuilderT ma) view eventChan = do
   liftIO checkMainThread
@@ -497,8 +501,11 @@ appendFragment holderObj = do
 addGestureRecognizer
   :: (SafeObjCoerce view UIViewType, SafeObjCoerce recognizer UIGestureRecognizerType, SupportsUIKitViewBuilder t m)
   => ObjPtr view
+  -- ^The view to add a gesture recognizer to.
   -> (Obj -> IO (ObjPtr recognizer))
+  -- ^Constructor for the gesture recognizer, taking the target object to trigger (with selector @handler:@).
   -> (ObjPtr recognizer -> IO a)
+  -- ^Action to read out relevant state information from the recognizer when producing the output event.
   -> UIKitViewBuilderT t m (Event t (GestureState a))
 addGestureRecognizer view mkRecognizer readRecognizerData = do
   (ev, trigger) <- newTriggerEvent
