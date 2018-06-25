@@ -2,7 +2,7 @@ name:           reflex-native-draggy
 version:        0.1.0.0
 synopsis:       Dragging example for Reflex Native
 author:         Confer Health
-maintainer:     se-operations@confer.health
+maintainer:     oss@confer.health
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple

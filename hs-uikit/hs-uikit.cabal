@@ -3,7 +3,7 @@ version:        0.1.0.0
 synopsis:       Bindings to UIKit
 description:    FFI bindings for UIKit, Foundation, CoreGraphics, etc.
 author:         Confer Health
-maintainer:     se-operations@confer.health
+maintainer:     oss@confer.health
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple

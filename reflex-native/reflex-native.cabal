@@ -3,7 +3,7 @@ version:        0.1.0.0
 synopsis:       Cross platform layer for developing native Reflex apps
 description:    Provides a cross platform API for developing Reflex apps that are true native with no web views or javascript runtimes
 author:         Confer Health
-maintainer:     se-operations@confer.health
+maintainer:     oss@confer.health
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
