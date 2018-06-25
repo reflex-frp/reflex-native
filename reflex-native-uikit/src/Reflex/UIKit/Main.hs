@@ -93,8 +93,9 @@ runViewController mkWidget = fst <$> ViewController.new initializeController
         (_, env) <- runUIKitViewBuilderT (runPostBuildT widget postBuild) rootView events
         pure ((env, events), postBuildTriggerRef)
 
-      -- hold on to the root retain objs forever. any objects retained by a dynamic component of the initial build will not be in the root retain objs but
-      -- instead held by the Requester, and we don't support end of lifetime for these view controllers anyway by virtue of processAsyncEvents running forever
+      -- FIXME hold on to the root retain objs forever. any objects retained by a dynamic component of the initial build will not be in the root retain objs
+      -- but instead held by the Requester, and we don't support end of lifetime for these view controllers anyway by virtue of processAsyncEvents running
+      -- forever
       void . liftIO . newStablePtr . _buildFrame_retainObjs . _env_frame $ env
 
       liftIO $ processAsyncEvents events fireCommand -- FIXME runs forever, even if the view controller is only used for a short time
