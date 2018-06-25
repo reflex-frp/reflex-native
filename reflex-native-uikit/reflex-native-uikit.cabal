@@ -3,7 +3,7 @@ version:        0.1.0.0
 synopsis:       Reflex FRP using UIKit directly, via hs-uikit
 description:    Reflex view building and implementation of Reflex Native cross-platform interface for UIKit, allowing Reflex applications to be developed without use of DOM.
 author:         Confer Health
-maintainer:     se-operations@confer.health
+maintainer:     oss@confer.health
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
