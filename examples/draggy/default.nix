@@ -1,5 +1,5 @@
 { mkDerivation, stdenv
-, base, reflex, reflex-native, reflex-native-uikit, vector-space }:
+, base, reflex, reflex-native, reflex-native-uikit ? null, vector-space }:
 mkDerivation {
   pname = "reflex-native";
   version = "0.1.0.0";
