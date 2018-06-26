@@ -2,7 +2,7 @@
 
 ### Fully native apps using Reflex
 
-_Caution:_ This README contains forward looking statements. See [the project status](#project-status)
+_Caution:_ This README contains forward looking statements. See [the project status](#project-status).
 
 Reflex Native is a framework for writing fully native apps using [Reflex](https://github.com/reflex-frp/reflex/), a
 [Functional Reactive Programming](https://wiki.haskell.org/Functional_Reactive_Programming) library for Haskell.
