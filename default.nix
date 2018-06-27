@@ -4,7 +4,7 @@ rec {
   # build environment.
   packages = {
     common = haskellPackages: {
-      reflex-native = haskellPackages.callPackage ./reflex-native {};
+      reflex-native = haskellPackages.callCabal2nix "reflex-native" ./reflex-native {};
       reflex-native-draggy = haskellPackages.callPackage ./examples/draggy {};
     };
 
@@ -15,7 +15,7 @@ rec {
 
     ios = haskellPackages: packages.common haskellPackages // {
       hs-uikit = haskellPackages.callPackage ./hs-uikit {};
-      reflex-native-uikit = haskellPackages.callPackage ./reflex-native-uikit {};
+      reflex-native-uikit = haskellPackages.callCabal2nix "reflex-native-uikit" ./reflex-native-uikit {};
     };
   };
 
