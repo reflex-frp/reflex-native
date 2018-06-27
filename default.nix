@@ -35,9 +35,9 @@ rec {
   overrides = {
     common = self: super: {
       rank2classes = nixpkgs.haskell.lib.dontCheck (self.callCabal2nix "rank2classes" (nixpkgs.fetchFromGitHub {
-        owner = "Dridus";
+        owner = "blamario";
         repo = "grampa";
-        rev = "389ac8ead37fa44e5e746e6e7817da3a3f69222c";
+        rev = "f35d8882ee6a60e91a86db339bdac94710d8bc6b";
         sha256 = "1ssv0lrbbj694rficrka56l628ha9l61wrnxqxy6yn9dawk6h6n8";
       } + /rank2classes) {});
     };
