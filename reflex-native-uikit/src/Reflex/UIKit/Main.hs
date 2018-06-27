@@ -74,7 +74,7 @@ run mkRootWidget = runGenericApplication config
 --
 -- __Warning:__ This function presently leaks an asynchronous message processing thread so should not be used for short lived controllers.
 {-# INLINABLE runViewController #-}
-runViewController :: (forall x. UIViewController -> UIView -> UIKitWidget x ()) -> MainThread UIViewController
+runViewController :: (UIViewController -> UIView -> UIKitWidget ()) -> MainThread UIViewController
 runViewController mkWidget = fst <$> ViewController.new initializeController
   where
     initializeController vc = do
