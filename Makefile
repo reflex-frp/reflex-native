@@ -9,8 +9,8 @@ nix_files = default.nix $(shell find . -type f -a -name default.nix | grep -v '^
 canonicalize_error_paths = sed \
   -e 's,^src/Reflex/Native/Android,reflex-native-android/src/Reflex/Native/Android,g' \
   -e 's,^src/Reflex/Native/Examples/Draggy,examples/draggy/src/Reflex/Native/Examples/Draggy,g' \
-  -e 's,^src/Reflex/Native/UIKit,reflex-native-uikit/src/Reflex/Native/UIKit,g' \
   -e 's,^src/Reflex/Native,reflex-native/src/Reflex/Native,g'
+  -e 's,^src/Reflex/UIKit,reflex-native-uikit/src/Reflex/UIKit,g'
 
 .PHONY: all clean $(platforms)
 
