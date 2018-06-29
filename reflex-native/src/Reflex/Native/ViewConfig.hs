@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE RecordWildCards #-}
 -- |Configuration of any type of view.
 module Reflex.Native.ViewConfig
@@ -11,6 +12,7 @@ module Reflex.Native.ViewConfig
 import Data.Functor.Identity (Identity)
 import Data.Maybe (Maybe(Nothing))
 import Data.Text (Text)
+import GHC.Generics (Generic)
 import Reflex.Class (Event)
 import Reflex.Native.Geometry (Rect(..), Point(..), Size(..))
 import Reflex.Native.ViewLayout (ViewLayout(..))
@@ -31,7 +33,7 @@ data ViewConfig t = ViewConfig
   -- ^Initial accessibility label to apply to the view.
   , _viewConfig_modifyAccessibilityLabel :: Maybe (Event t (Maybe Text))
   -- ^Optional @Event@ to dynamically update accessiblity label after initial display.
-  }
+  } deriving (Generic)
 
 -- |Default 'ViewConfig' with the 'defaultInitialViewStyle', fixed 0x0+0x0 layout, and no dynamically updating anything.
 defaultViewConfig :: ViewConfig t
@@ -53,7 +55,7 @@ data RawViewConfig t = RawViewConfig
   -- ^Optional @Event@ to update the layout of a view dynamically.
   , _rawViewConfig_modifyAccessibilityLabel :: Maybe (Event t (Maybe Text))
   -- ^Optional @Event@ to dynamically update accessiblity label after initial display.
-  }
+  } deriving (Generic)
 
 -- |Default 'RawViewConfig' which never dynamically updates anything.
 defaultRawViewConfig :: RawViewConfig t

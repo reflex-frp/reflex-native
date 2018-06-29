@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE RankNTypes #-}
 -- |Style of displayed text.
 module Reflex.Native.TextStyle
@@ -6,6 +7,7 @@ module Reflex.Native.TextStyle
 
 import Data.Functor.Identity (Identity(..))
 import Data.Monoid ((<>))
+import GHC.Generics (Generic)
 import qualified Rank2
 import Rank2 (apply)
 import Reflex.Class (Event, Reflex, never)
@@ -22,7 +24,7 @@ data TextStyle v = TextStyle
   -- ^The color to display the text with.
   , _textStyle_font :: v Font
   -- ^The font to display the text with.
-  }
+  } deriving (Generic)
 
 instance Rank2.Functor TextStyle where
   f <$> TextStyle a b = TextStyle (f a) (f b)

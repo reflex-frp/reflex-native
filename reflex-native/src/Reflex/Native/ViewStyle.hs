@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE RankNTypes #-}
 -- |Style parameters for all views.
 module Reflex.Native.ViewStyle
@@ -5,6 +6,7 @@ module Reflex.Native.ViewStyle
   ) where
 
 import Data.Functor.Identity (Identity(..))
+import GHC.Generics (Generic)
 import qualified Rank2
 import Rank2 (apply)
 import Reflex.Class (Event, Reflex, never)
@@ -17,7 +19,7 @@ import Reflex.Native.Color (Color, clear)
 data ViewStyle f = ViewStyle
   { _viewStyle_backgroundColor :: f Color
   -- ^Background color to draw the view with.
-  }
+  } deriving (Generic)
 
 instance Rank2.Functor ViewStyle where
   f <$> ViewStyle a = ViewStyle (f a)

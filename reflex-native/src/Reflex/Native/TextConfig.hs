@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 -- |Configuration of a text display view.
 module Reflex.Native.TextConfig
@@ -7,6 +8,7 @@ module Reflex.Native.TextConfig
 import Data.Functor.Identity (Identity)
 import Data.Maybe (Maybe(Nothing))
 import Data.Text (Text)
+import GHC.Generics (Generic)
 import Reflex.Class (Event)
 import Reflex.Native.TextStyle (TextStyle, defaultInitialTextStyle)
 import Reflex.Native.ViewConfig (ViewConfig, defaultViewConfig)
@@ -24,7 +26,7 @@ data TextConfig t = TextConfig
   -- ^A 'TextStyle' where each parameter is an @Event@ which dynamically updates the associated style of the displayed text when it fires.
   , _textConfig_viewConfig   :: ViewConfig t
   -- ^The general 'ViewConfig' for the view.
-  }
+  } deriving (Generic)
 
 -- |Default text configuration which displays no text, has a default style, and never updates.
 defaultTextConfig :: TextConfig t
