@@ -12,23 +12,24 @@
 module Reflex.Native.ViewBuilder.Class where
 
 import Control.Monad (Monad)
+import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader (ReaderT(..), ask)
-import qualified Control.Monad.RWS.Strict as RWSStrict
-import qualified Control.Monad.RWS.Lazy as RWSLazy
-import qualified Control.Monad.State.Strict as StateStrict
-import qualified Control.Monad.State.Lazy as StateLazy
-import qualified Control.Monad.Writer.Strict as WriterStrict
-import qualified Control.Monad.Writer.Lazy as WriterLazy
+import Control.Monad.State.Strict (get, put, runStateT)
 import Control.Monad.Trans.Class (MonadTrans(lift))
 import Data.Monoid (Monoid)
-import Reflex.Class (Event, Reflex)
-import Reflex.DynamicWriter (DynamicWriterT(..))
-import Reflex.EventWriter (EventWriterT(..))
+import Data.Semigroup (Semigroup)
+import Reflex.Class (Adjustable, Event, MonadHold, Reflex)
+import Reflex.DynamicWriter.Base (DynamicWriterT(..))
+import Reflex.EventWriter.Base (EventWriterT(..))
 import Reflex.Native.Gesture (GestureData, GestureSpec, GestureState)
 import Reflex.Native.TextConfig (TextConfig)
 import Reflex.Native.ViewConfig (ViewConfig, RawViewConfig)
+import Reflex.NotReady.Class (NotReady)
+import Reflex.Patch (Additive, Group)
+import Reflex.PerformEvent.Class (PerformEvent)
 import Reflex.PostBuild.Base (PostBuildT(..))
 import Reflex.Query.Base (QueryT(..))
+import Reflex.Query.Class (Query)
 import Reflex.Requester.Base (RequesterT(..))
 
 
@@ -50,7 +51,7 @@ newtype View space t = View { _buildView_raw :: RawView space }
 
 -- |Typeclass for monads used to build view hierarchies which react over time to events in a cross-platform way. A function being polymorphic over
 -- @ViewBuilder t m@ means it should work identically on any supported platform.
-class (Monad m, Reflex t, ViewSpace (ViewBuilderSpace m)) => ViewBuilder t m | m -> t where
+class (Monad m, Reflex t, Adjustable t m, NotReady t m, ViewSpace (ViewBuilderSpace m)) => ViewBuilder t m | m -> t where
   -- |The associated 'ViewSpace' for this builder monad.
   type ViewBuilderSpace m :: *
 
@@ -58,7 +59,7 @@ class (Monad m, Reflex t, ViewSpace (ViewBuilderSpace m)) => ViewBuilder t m | m
   buildTextView :: TextConfig t -> m (TextView (ViewBuilderSpace m) t)
 
   -- |Create a view containing some child hierarchy, returning the created view along with whatever the result of the inner build was.
-  buildView :: ViewConfig t -> m a -> m (View (ViewBuilderSpace m) t, a)
+  buildView :: ViewConfig t -> m a -> m (a, View (ViewBuilderSpace m) t)
 
   -- |Place a 'RawView' created externally in the view hierarchy being built, for example with functions or libraries that know the precise type of view
   -- hierarchy in use.
@@ -118,9 +119,8 @@ class (Monad m, Reflex t, ViewSpace (ViewBuilderSpace m)) => ViewBuilder t m | m
   recognizeGesture v spec = lift $ recognizeGesture v spec
 
 -- |Pass through 'PostBuildT'.
-instance (ViewBuilder t m, Monad m) => ViewBuilder t (PostBuildT t m) where
+instance (ViewBuilder t m, PerformEvent t m, MonadFix m, MonadHold t m) => ViewBuilder t (PostBuildT t m) where
   type ViewBuilderSpace (PostBuildT t m) = ViewBuilderSpace m
-
   buildView cfg (PostBuildT body) = PostBuildT $ buildView cfg body
 
 -- |Pass through 'ReaderT'.
@@ -128,67 +128,43 @@ instance (ViewBuilder t m, Monad m) => ViewBuilder t (ReaderT r m) where
   type ViewBuilderSpace (ReaderT r m) = ViewBuilderSpace m
   buildView cfg body = do
     r <- ask
-    (vn, a) <- lift $ buildView cfg (runReaderT body r)
-    pure (vn, a)
+    (a, vn) <- lift $ buildView cfg (runReaderT body r)
+    pure (a, vn)
 
--- |Pass through lazy 'WriterT'.
-instance (ViewBuilder t m, Monoid w, Monad m) => ViewBuilder t (WriterLazy.WriterT w m) where
-  type ViewBuilderSpace (WriterLazy.WriterT w m) = ViewBuilderSpace m
-  buildView cfg body = do
-    (vn, (a, w)) <- lift $ buildView cfg (WriterLazy.runWriterT body)
-    WriterLazy.tell w
-    pure (vn, a)
+-- |Pass through 'DynamicWriterT'.
+instance (ViewBuilder t m, MonadHold t m, MonadFix m, Monoid w) => ViewBuilder t (DynamicWriterT t w m) where
+  type ViewBuilderSpace (DynamicWriterT t w m) = ViewBuilderSpace m
+  buildView cfg (DynamicWriterT body) = DynamicWriterT $ do
+    oldS <- get
+    ((a, newS), vn) <- lift . buildView cfg $ runStateT body oldS
+    put newS
+    pure (a, vn)
 
--- |Pass through strict 'WriterT'.
-instance (ViewBuilder t m, Monoid w, Monad m) => ViewBuilder t (WriterStrict.WriterT w m) where
-  type ViewBuilderSpace (WriterStrict.WriterT w m) = ViewBuilderSpace m
-  buildView cfg body = do
-    (vn, (a, w)) <- lift $ buildView cfg (WriterStrict.runWriterT body)
-    WriterStrict.tell w
-    pure (vn, a)
+-- |Pass through 'RequesterT'.
+instance (ViewBuilder t m, MonadHold t m, MonadFix m) => ViewBuilder t (RequesterT t request response m) where
+  type ViewBuilderSpace (RequesterT t request response m) = ViewBuilderSpace m
+  buildView cfg (RequesterT body) = RequesterT $ do
+    r <- ask
+    oldS <- get
+    ((a, newS), vn) <- lift . lift . buildView cfg $ runReaderT (runStateT body oldS) r
+    put newS
+    pure (a, vn)
 
--- |Pass through lazy 'StateLazy.StateT'.
-instance (ViewBuilder t m, Monad m) => ViewBuilder t (StateLazy.StateT s m) where
-  type ViewBuilderSpace (StateLazy.StateT s m) = ViewBuilderSpace m
-  buildView cfg body = do
-    s <- StateLazy.get
-    (vn, (a, s')) <- lift $ buildView cfg (StateLazy.runStateT body s)
-    StateLazy.put s'
-    pure (vn, a)
+-- |Pass through 'EventWriterT'.
+instance (ViewBuilder t m, MonadHold t m, MonadFix m, Semigroup w) => ViewBuilder t (EventWriterT t w m) where
+  type ViewBuilderSpace (EventWriterT t w m) = ViewBuilderSpace m
+  buildView cfg (EventWriterT body) = EventWriterT $ do
+    oldS <- get
+    ((a, newS), vn) <- lift . buildView cfg $ runStateT body oldS
+    put newS
+    pure (a, vn)
 
--- |Pass through strict 'StateStrict.StateT'.
-instance (ViewBuilder t m, Monad m) => ViewBuilder t (StateStrict.StateT s m) where
-  type ViewBuilderSpace (StateStrict.StateT s m) = ViewBuilderSpace m
-  buildView cfg body = do
-    s <- StateStrict.get
-    (vn, (a, s')) <- lift $ buildView cfg (StateStrict.runStateT body s)
-    StateStrict.put s'
-    pure (vn, a)
-
--- |Pass through lazy 'RWSLazy.RWST'.
-instance (ViewBuilder t m, Monoid w, Monad m) => ViewBuilder t (RWSLazy.RWST r w s m) where
-  type ViewBuilderSpace (RWSLazy.RWST r w s m) = ViewBuilderSpace m
-  buildView cfg body = do
-    r <- RWSLazy.ask
-    s <- RWSLazy.get
-    (vn, (a, s', w)) <- lift $ buildView cfg (RWSLazy.runRWST body r s)
-    RWSLazy.put s'
-    RWSLazy.tell w
-    pure (vn, a)
-
--- |Pass through strict 'RWSStrict.RWST'.
-instance (ViewBuilder t m, Monoid w, Monad m) => ViewBuilder t (RWSStrict.RWST r w s m) where
-  type ViewBuilderSpace (RWSStrict.RWST r w s m) = ViewBuilderSpace m
-  buildView cfg body = do
-    r <- RWSStrict.ask
-    s <- RWSStrict.get
-    (vn, (a, s', w)) <- lift $ buildView cfg (RWSStrict.runRWST body r s)
-    RWSStrict.put s'
-    RWSStrict.tell w
-    pure (vn, a)
-
-deriving instance (ViewBuilder t m, Monad m) => ViewBuilder t (DynamicWriterT t w m)
-deriving instance (ViewBuilder t m, Monad m) => ViewBuilder t (EventWriterT t w m)
-deriving instance (ViewBuilder t m, Monad m) => ViewBuilder t (QueryT t w m)
-deriving instance (ViewBuilder t m, Monad m) => ViewBuilder t (RequesterT t req res m)
+-- |Pass through 'QueryT'.
+instance (ViewBuilder t m, MonadHold t m, MonadFix m, Group q, Query q, Additive q) => ViewBuilder t (QueryT t q m) where
+  type ViewBuilderSpace (QueryT t q m) = ViewBuilderSpace m
+  buildView cfg (QueryT body) = QueryT $ do
+    oldS <- get
+    ((a, newS), vn) <- lift . buildView cfg $ runStateT body oldS
+    put newS
+    pure (a, vn)
 

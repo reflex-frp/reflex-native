@@ -26,10 +26,13 @@ import Reflex.Native.Geometry as Export
 import Reflex.Native.Gesture as Export
 import Reflex.Native.TextConfig as Export
 import Reflex.Native.TextStyle as Export
+import Reflex.Native.Widget.Basic as Export
+import Reflex.Native.Widget.Customization as Export
 import Reflex.Native.ViewBuilder.Class as Export
 import Reflex.Native.ViewConfig as Export
 import Reflex.Native.ViewLayout as Export
 import Reflex.Native.ViewStyle as Export
+import Reflex.NotReady.Class as Export
 
 
 -- |Grab-bag of constraints which make a fully-featured Reflex Native monad stack.
@@ -37,8 +40,9 @@ import Reflex.Native.ViewStyle as Export
 -- Specifically:
 --
 --     * 'ViewBuilder', granting the ability to build reactive view hierarchies that are cross platform.
---     * 'Adjustable', granting the ability to react to @Event@s by changing the built view hierarchy at various levels of
+--     * 'Adjustable', implied by @ViewBuilder@, granting the ability to react to @Event@s by changing the built view hierarchy at various levels of
 --     granularity.
+--     * 'NotReady', implied by @ViewBuilder@, granting the ability to defer installation of views until prerequisites are available.
 --     * 'Reflex', granting essential FRP functionality like @Behavior@, @Event@, etc. and associated functions.
 --     * 'MonadFix', granting the ability to make recursive bindings which is especially important for UIs as components often rely on previous state to
 --     determine future state and the order of views controls which views overlap others, but the flow of data might not be in the same order.

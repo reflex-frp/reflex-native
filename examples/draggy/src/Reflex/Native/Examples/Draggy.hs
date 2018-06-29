@@ -10,16 +10,15 @@ module Reflex.Native.Examples.Draggy where
 
 import Data.AdditiveGroup ((^+^), zeroV)
 import Data.Functor (($>))
-import Data.Functor.Identity (Identity(..))
 import Data.Maybe (Maybe(Just, Nothing))
-import Reflex (attachWith, current, ffor, fforMaybeCheap, fmapMaybeCheap, getPostBuild, holdDyn, updated, zipDynWith)
+import Data.Monoid ((<>))
+import Reflex (attachWith, current, ffor, fforMaybeCheap, fmapMaybeCheap, getPostBuild, holdDyn, zipDynWith)
 import Reflex.Native
-  ( MonadNative, ViewBuilder(type ViewBuilderSpace, buildTextView, buildView, recognizeGesture, wrapRawView), ViewSpace(type RawView)
+  ( MonadNative, ViewBuilder(type ViewBuilderSpace, recognizeGesture, wrapRawView), ViewSpace(type RawView)
+  , containerWith, textWith_, accessibilityLabel, backgroundColor, dynLayout, layout
   , GestureSpec(..), GestureState(..), PanGesture(..), _gestureState_data
   , Point(..), Rect(..), Size(..), lightGray, darkGray
-  , TextConfig(..), defaultTextConfig
   , RawViewConfig(..), defaultRawViewConfig
-  , ViewConfig(..), defaultViewConfig
   , ViewLayout(..)
   , ViewStyle(..), defaultModifyViewStyle
   )
@@ -36,18 +35,9 @@ main rootRawView = do
 
   rec
     let pos0 = Point 10 10
-    (vn, _) <- buildView
-      (defaultViewConfig
-        { _viewConfig_initialStyle = ViewStyle (Identity darkGray)
-        , _viewConfig_initialLayout = ViewLayout_Fixed (Rect pos0 (Size 100 100))
-        , _viewConfig_modifyLayout = Just $ ffor (updated pos) $ \ p -> ViewLayout_Fixed (Rect p (Size 100 100))
-        , _viewConfig_initialAccessibilityLabel = Just "test view"
-        }) $ do
-        _ <- buildTextView $ defaultTextConfig
-          { _textConfig_viewConfig = defaultViewConfig { _viewConfig_initialLayout = ViewLayout_Fixed (Rect (Point 0 0) (Size 100 100)) }
-          , _textConfig_initialText = "drag me!"
-          }
-        pure ()
+        layoutDyn = ffor pos $ \ p -> ViewLayout_Fixed (Rect p (Size 100 100))
+    (_, vn) <- containerWith (backgroundColor darkGray <> dynLayout layoutDyn <> accessibilityLabel "test view") $ do
+      textWith_ (layout (ViewLayout_Fixed (Rect (Point 0 0) (Size 100 100)))) "drag me!"
     panState <- recognizeGesture vn GestureSpec_Pan
     lastStartPos <- holdDyn pos0 $ attachWith const (current pos) $ fforMaybeCheap panState $ \ case
       GestureState_Began _ -> Just ()

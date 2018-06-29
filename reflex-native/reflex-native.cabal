@@ -22,6 +22,8 @@ library
       Reflex.Native.Gesture
       Reflex.Native.TextConfig
       Reflex.Native.TextStyle
+      Reflex.Native.Widget.Basic
+      Reflex.Native.Widget.Customization
       Reflex.Native.ViewBuilder.Class
       Reflex.Native.ViewConfig
       Reflex.Native.ViewLayout
@@ -35,6 +37,8 @@ library
     , containers == 0.5.*
     , dependent-map == 0.2.*
     , dependent-sum >= 0.3 && < 0.5
+    , generic-lens == 0.4.*
+    , lens == 4.15.*
     , mtl >= 2.1 && < 2.3
     , rank2classes == 1.1.*
     , ref-tf == 0.4.*

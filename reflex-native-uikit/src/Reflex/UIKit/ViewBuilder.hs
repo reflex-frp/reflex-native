@@ -287,7 +287,7 @@ instance SupportsUIKitViewBuilder t m => ViewBuilder t (UIKitViewBuilderT t m) w
 
     append view
 
-    pure (View view, result)
+    pure (result, View view)
 
   {-# INLINABLE placeRawView #-}
   placeRawView = append
