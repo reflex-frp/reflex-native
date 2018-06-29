@@ -30,4 +30,5 @@ _build/%/shell: $(nix_files) $(cabal_files)
 	nix-shell --pure --add-root _build/$*/nix-root/nix-gc-root --indirect -A shells.$* --run 'set | grep -v -E "^(BASH_[^=]*|BASHOPTS|EUID|GROUPS|PPID|SHELLOPTS|UID)="' > $@
 	echo 'runHook shellHook' >> $@
 	echo '"$$@"' >> $@
+	echo 'exit $$?' >> $@
 	chmod +x $@
