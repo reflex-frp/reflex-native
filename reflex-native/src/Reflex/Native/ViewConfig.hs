@@ -27,11 +27,11 @@ data ViewConfig t = ViewConfig
   -- ^Optional @Event@s to dynamically update the view style after initial display.
   , _viewConfig_initialLayout :: ViewLayout
   -- ^Initial layout for the view.
-  , _viewConfig_modifyLayout :: Maybe (Event t ViewLayout)
+  , _viewConfig_setLayout :: Maybe (Event t ViewLayout)
   -- ^Optional @Event@ to update the layout of a view dynamically.
   , _viewConfig_initialAccessibilityLabel :: Maybe Text
   -- ^Initial accessibility label to apply to the view.
-  , _viewConfig_modifyAccessibilityLabel :: Maybe (Event t (Maybe Text))
+  , _viewConfig_setAccessibilityLabel :: Maybe (Event t (Maybe Text))
   -- ^Optional @Event@ to dynamically update accessiblity label after initial display.
   } deriving (Generic)
 
@@ -41,9 +41,9 @@ defaultViewConfig = ViewConfig
   { _viewConfig_initialStyle              = defaultInitialViewStyle
   , _viewConfig_modifyStyle               = Nothing
   , _viewConfig_initialLayout             = ViewLayout_Fixed (Rect (Point 0 0) (Size 0 0))
-  , _viewConfig_modifyLayout              = Nothing
+  , _viewConfig_setLayout                 = Nothing
   , _viewConfig_initialAccessibilityLabel = Nothing
-  , _viewConfig_modifyAccessibilityLabel  = Nothing
+  , _viewConfig_setAccessibilityLabel     = Nothing
   }
 
 -- |Configuration of a raw view created outside Reflex Native and then adopted using 'Reflex.Native.ViewBuilder.Class.wrapRawView' or similar. Allows dynamic
@@ -51,25 +51,25 @@ defaultViewConfig = ViewConfig
 data RawViewConfig t = RawViewConfig
   { _rawViewConfig_modifyStyle :: Maybe (ViewStyle (Event t))
   -- ^Optional @Event@s to dynamically update the view style after initial display.
-  , _rawViewConfig_modifyLayout :: Maybe (Event t ViewLayout)
+  , _rawViewConfig_setLayout :: Maybe (Event t ViewLayout)
   -- ^Optional @Event@ to update the layout of a view dynamically.
-  , _rawViewConfig_modifyAccessibilityLabel :: Maybe (Event t (Maybe Text))
+  , _rawViewConfig_setAccessibilityLabel :: Maybe (Event t (Maybe Text))
   -- ^Optional @Event@ to dynamically update accessiblity label after initial display.
   } deriving (Generic)
 
 -- |Default 'RawViewConfig' which never dynamically updates anything.
 defaultRawViewConfig :: RawViewConfig t
 defaultRawViewConfig = RawViewConfig
-  { _rawViewConfig_modifyStyle              = Nothing
-  , _rawViewConfig_modifyLayout             = Nothing
-  , _rawViewConfig_modifyAccessibilityLabel = Nothing
+  { _rawViewConfig_modifyStyle           = Nothing
+  , _rawViewConfig_setLayout             = Nothing
+  , _rawViewConfig_setAccessibilityLabel = Nothing
   }
 
 -- |Extract the equivalent 'RawViewConfig' for some 'ViewConfig'.
 viewConfigToRawViewConfig :: ViewConfig t -> RawViewConfig t
 viewConfigToRawViewConfig (ViewConfig {..}) = RawViewConfig
-  { _rawViewConfig_modifyStyle              = _viewConfig_modifyStyle
-  , _rawViewConfig_modifyLayout             = _viewConfig_modifyLayout
-  , _rawViewConfig_modifyAccessibilityLabel = _viewConfig_modifyAccessibilityLabel
+  { _rawViewConfig_modifyStyle           = _viewConfig_modifyStyle
+  , _rawViewConfig_setLayout             = _viewConfig_setLayout
+  , _rawViewConfig_setAccessibilityLabel = _viewConfig_setAccessibilityLabel
   }
 

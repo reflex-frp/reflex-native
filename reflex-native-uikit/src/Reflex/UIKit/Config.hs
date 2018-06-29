@@ -35,7 +35,7 @@ applyModifyViewConfig
 applyModifyViewConfig v (ViewConfig {..}) = do
   for_ _viewConfig_modifyStyle $
     applyViewStyle modifyStyle v
-  for_ _viewConfig_modifyAccessibilityLabel $
+  for_ _viewConfig_setAccessibilityLabel $
     requesting_ . fmap (UIAccessibility.setAccessibilityLabel v <=< traverse (liftIO . NSString.fromText))
-  for_ _viewConfig_modifyLayout $
+  for_ _viewConfig_setLayout $
     requesting_ . fmap (applyLayout v)
