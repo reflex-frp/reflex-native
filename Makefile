@@ -1,5 +1,4 @@
 platforms = host ios android
-cabal_target ?= all
 cabal_files = $(shell find . -type f -a -name '*.cabal' | grep -v '^[.]/_build' | grep -v '^[.]/[.]')
 nix_files = default.nix $(shell find . -type f -a -name default.nix | grep -v '^[.]/_build' | grep -v '^[.]/[.]')
 
@@ -16,7 +15,8 @@ canonicalize_error_paths = sed \
 .PHONY: all clean $(platforms)
 
 $(platforms): %: _build/%/shell
-	_build/$*/shell cabal --project-file=$*.project --builddir=_build/$*/dist new-build $(cabal_target) 2>&1 | $(canonicalize_error_paths)
+	set -eo pipefail ; _build/$*/shell cabal --project-file=$*.project --builddir=_build/$*/dist new-build all 2>&1 | $(canonicalize_error_paths)
+	set -eo pipefail ; _build/$*/shell cabal --project-file=$*.project --builddir=_build/$*/dist new-test all 2>&1 | $(canonicalize_error_paths)
 
 clean:
 	rm -rf _build

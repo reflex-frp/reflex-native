@@ -82,8 +82,7 @@ So, a `Makefile` is provided with targets for each platform which also builds ea
 Make targets:
 
 * `make host` makes `_build/host/shell` by caching the `shells.host` `nix-shell` environment and runs
-`cabal --project-file=host.project --builddir=_build/ios/dist new-build all` in that environment. `host` is also the default Make target. You can instruct
-cabal to only build some target(s) by passing `cabal_target=...` to Make.
+`cabal --project-file=host.project --builddir=_build/ios/dist new-build all` in that environment. `host` is also the default Make target.
 * `make ios` and `make android` do the same for iOS and Android respectively.
 * `make all` is equivalent to `make host ios android` in the unlikely circumstance your machine is capable of building all platforms.
 * `make clean` removes the `_build` directory where all the intermediate build products go.
