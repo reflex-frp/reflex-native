@@ -1,11 +1,10 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE ExplicitNamespaces #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeFamilies #-}
 -- |Cross-platform notions of geometry, such as points and rectangles.
 module Reflex.Native.Geometry
-  (
-    Point(..), Size(..), Rect(..)
-  ) where
+  ( Point(..), Size(..), Rect(..) ) where
 
 import Data.AdditiveGroup (AdditiveGroup(zeroV, (^+^), negateV, (^-^)))
 import Data.VectorSpace (VectorSpace(type Scalar, (*^)))
@@ -19,6 +18,13 @@ data Point = Point
   { _point_x :: !Double
   , _point_y :: !Double
   } deriving (Eq, Generic)
+
+-- |Show a 'Point' as @(x,y)@
+instance Show Point where
+  showsPrec _ (Point {..})
+    = ('(':)
+    . shows _point_x . (',':)
+    . shows _point_y . (')':)
 
 -- |Points form an additive group by distribution, e.g. @Point x1 y1 ^+^ Point x2 y2 == Point (x1 ^+^ x2) (y1 ^+^ y2)@.
 instance AdditiveGroup Point where
@@ -38,6 +44,13 @@ data Size = Size
   , _size_height :: !Double
   } deriving (Eq, Generic)
 
+-- |Show a 'Size' as @(wxh)@.
+instance Show Size where
+  showsPrec _ (Size {..})
+    = ('(':)
+    . shows _size_width . ('x':)
+    . shows _size_height . (')':)
+
 -- |Sizes form an additive group by distribution, e.g. @Size w1 h1 ^+^ Size w2 h2 == Size (w1 ^+^ w2) (h1 ^+^ h2)@.
 instance AdditiveGroup Size where
   zeroV = Size 0 0
@@ -55,3 +68,7 @@ data Rect = Rect
   { _rect_origin :: !Point
   , _rect_size   :: !Size
   } deriving (Eq, Generic)
+
+-- |Show a 'Rect' as @(x,y)+(wxh)@
+instance Show Rect where
+  showsPrec _ (Rect {..}) = shows _rect_origin . ('+':) . shows _rect_size

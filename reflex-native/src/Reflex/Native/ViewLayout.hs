@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE LambdaCase #-}
 -- |Cross platform notion of view layout. FIXME totally lame right now.
 module Reflex.Native.ViewLayout
   ( ViewLayout(..)
@@ -14,3 +15,8 @@ data ViewLayout
   -- ^Position the view at an exact location and with an exact size.
   -- The view does not affect the layout of other views, as if it were not there from a layout perspective.
   deriving (Eq, Generic)
+
+-- |Show a 'ViewLayout' compactly for diagnostics.
+instance Show ViewLayout where
+  showsPrec _ = \ case
+    ViewLayout_Fixed r -> showString "fixed " . shows r

@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 -- |Cross-platform notion of colors.
 module Reflex.Native.Color
   (
@@ -6,6 +7,8 @@ module Reflex.Native.Color
   -- * @Color@ constants and constructors
   , gray, black, red, green, blue, yellow, cyan, magenta, lightGray, darkGray, white, clear
   ) where
+
+import Text.Show (showString)
 
 
 -- |Color represented in RGB with an alpha component. Each component should be in the range [0.0 .. 1.0]; values outside of this range are undefined but
@@ -19,7 +22,17 @@ data Color = Color
   -- ^The blue value of the color from 0.0 to 1.0 inclusive.
   , _color_alpha :: {-# UNPACK #-} !Double
   -- ^The alpha value of the color from 0.0 to 1.0 inclusive.
-  } deriving (Eq, Show)
+  } deriving (Eq)
+
+-- |Show a 'Color' as @rgba(r,g,b,a)@.
+instance Show Color where
+  showsPrec _ (Color {..})
+    = showString "rgba("
+    . shows _color_red . (',':)
+    . shows _color_green . (',':)
+    . shows _color_blue . (',':)
+    . shows _color_alpha
+    . (')':)
 
 -- |Construct a neutral gray of the given saturation (0.0 being black and 1.0 being white) and alpha component.
 gray :: Double -> Double -> Color
