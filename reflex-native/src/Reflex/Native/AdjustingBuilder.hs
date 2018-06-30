@@ -33,7 +33,7 @@ module Reflex.Native.AdjustingBuilder
   ) where
 
 import Control.Applicative ((<$>), pure)
-import Control.Monad (Monad, (>>=), unless, when)
+import Control.Monad (Monad, (>>=), when)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Bifunctor (bimap)
@@ -53,7 +53,7 @@ import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Maybe (Maybe(Just, Nothing), fromMaybe, maybe)
+import Data.Maybe (Maybe(Just, Nothing), fromMaybe, isNothing, maybe)
 import Data.Monoid (mempty)
 import Data.Some (Some, withSome)
 import qualified Data.Some as Some
@@ -220,16 +220,16 @@ adjustingBuilder (AdjustingBuilderConfig {..}) adjustBase weakenKey foldStructur
       markerAfter key = maybe endMarker (_slot_startMarker . snd) . Map.lookupGT key <$> liftIO (readIORef slotsRef)
 
       -- get the Slot associated with a @weakKey@ or make a new one and add it to the map if one doesn't already exist
-      getOrCreateSlotAndInstallMarker :: weakKey -> b (Slot slotAddendum marker)
+      getOrCreateSlotAndInstallMarker :: weakKey -> b (Slot slotAddendum marker, Bool)
       getOrCreateSlotAndInstallMarker weakKey =
         getSlot weakKey >>= \ case
-          Just slot -> pure slot
+          Just slot -> pure (slot, False)
           Nothing -> do
             slot <- createSlot
             putSlot weakKey slot
             nextMarker <- markerAfter weakKey
             _adjustingBuilderConfig_insertMarkerBeforeMarker (_slot_startMarker slot) nextMarker
-            pure slot
+            pure (slot, True)
 
       -- do the final steps to install a fragment in a slot, either after a commit has determined it's okay to do or if the fragment was immediately ready
       install :: weakKey -> Slot slotAddendum marker -> Bool -> MovingSlot slotAddendum holder -> b ()
@@ -253,7 +253,7 @@ adjustingBuilder (AdjustingBuilderConfig {..}) adjustBase weakenKey foldStructur
         hasEverBeenReady <- liftIO $ readIORef hasEverBeenReadyRef
         when (neverBeenReadyCount > 0) . liftIO . writeIORef neverBeenReadyCountRef $! pred neverBeenReadyCount
         -- (4)
-        when (neverBeenReadyCount == 0 && not hasEverBeenReady) $ do
+        when (pred neverBeenReadyCount == 0 && not hasEverBeenReady) $ do
           becameReadyInParent
           liftIO $ writeIORef hasEverBeenReadyRef True
 
@@ -267,9 +267,8 @@ adjustingBuilder (AdjustingBuilderConfig {..}) adjustBase weakenKey foldStructur
           slotMay <- getSlot key
           for_ slotMay $ \ slot -> do
             -- (2)
-            unless (_movingSlot_generation > _slot_installedGeneration slot) $ do
+            when (_movingSlot_generation > _slot_installedGeneration slot) $ do
               install key slot True movingSlot
-
 
   -- delegate to the base monad to traverse runChildInstance on each initial child in the structure along with each updated child from the structure patches
   -- run the action against each new or updated child, then do the actual view manipulation later based on the results of the individual builds
@@ -320,7 +319,9 @@ adjustingBuilder (AdjustingBuilderConfig {..}) adjustBase weakenKey foldStructur
               pure prevCount
     in foldStructureM processInitialChild 0 children0
   liftIO $ writeIORef neverBeenReadyCountRef neverBeenReadyCount0
-  when (neverBeenReadyCount0 > 0) notReady
+  if neverBeenReadyCount0 > 0
+    then notReady
+    else liftIO $ writeIORef hasEverBeenReadyRef True
 
   _adjustingBuilderConfig_appendMarker endMarker
 
@@ -333,10 +334,10 @@ adjustingBuilder (AdjustingBuilderConfig {..}) adjustBase weakenKey foldStructur
           -- we'll have to grab the contents of the source slots now
           collected <-
             let collectMovingFragments
-                  :: forall a. (Map weakKey (MovingSlot slotAddendum holder))
+                  :: forall a. (Map weakKey (MovingSlot slotAddendum holder, Maybe (IORef (Maybe weakKey))))
                   -> key a
                   -> NodeInfo key (ChildInstance slotAddendum holder value') a
-                  -> b (Map weakKey (MovingSlot slotAddendum holder))
+                  -> b (Map weakKey (MovingSlot slotAddendum holder, Maybe (IORef (Maybe weakKey))))
                 collectMovingFragments collected key (NodeInfo _ (ComposeMaybe toMay))
                   | Just _ <- toMay = do
                       let weakKey = weakenKey key
@@ -350,7 +351,11 @@ adjustingBuilder (AdjustingBuilderConfig {..}) adjustBase weakenKey foldStructur
                                 , _movingSlot_generation = _slot_installedGeneration
                                 , _movingSlot_holder
                                 }
-                          pure $ Map.insert weakKey movingSlot collected
+                          -- make sure to pick up an unready key reference here too since a From_Insert might be processed on this slot and smash it before
+                          -- the move can recover it
+                          keyMayRefMay <- liftIO $ Map.lookup weakKey <$> readIORef unreadyKeyReferencesRef
+                          liftIO $ modifyIORef' unreadyKeyReferencesRef (Map.delete weakKey)
+                          pure $ Map.insert weakKey (movingSlot, keyMayRefMay) collected
                         Nothing ->
                           pure collected
                   | otherwise = pure collected
@@ -364,29 +369,42 @@ adjustingBuilder (AdjustingBuilderConfig {..}) adjustBase weakenKey foldStructur
                   -> key a
                   -> NodeInfo key (ChildInstance slotAddendum holder value') a
                   -> b ()
-                applyUpdate _ key (NodeInfo from _) = do
+                applyUpdate _ key (NodeInfo from (ComposeMaybe toKeyMay)) = do
                   let weakKey = weakenKey key
                   case from of
                     From_Insert (ChildInstance {..}) -> do
-                      slot <- getOrCreateSlotAndInstallMarker weakKey
+                      (slot, isNew) <- getOrCreateSlotAndInstallMarker weakKey
                       case _childInstance_ready of
                         Nothing -> do
                           -- (3) if this is a new slot entirely and not updating an existing slot, then make sure to increment the neverBeenReadyCount to
                           -- prevent the parent from becoming ready while this new unready slot is still pending. (4) is not a concern because we have a
                           -- separate bool keeping track of whether we've marked the parent ready or not yet
-                          liftIO . when (_slot_installedGeneration slot == 0) $ modifyIORef' neverBeenReadyCountRef succ
+                          liftIO . when isNew $ modifyIORef' neverBeenReadyCountRef succ
 
                           -- nothing else to do, the start marker has already been installed and the commit hook has been set up so that'll install the view
                           -- when it's ready
+                          pure ()
 
                         Just movingSlot -> do
-                          install weakKey slot True movingSlot
+                          when (_slot_installedGeneration slot == 0 && not isNew && isNothing toKeyMay) $ previouslyNeverReadySlotBecameReady
+                          install weakKey slot False movingSlot
 
                     From_Move srcKey -> do
                       let weakSrcKey = weakenKey srcKey
-                          movingSlot = fromMaybe (error "moving slot not in collected map, patch invariant violated") (Map.lookup weakSrcKey collected)
-                      slot <- getOrCreateSlotAndInstallMarker weakKey
+                          (movingSlot, keyMayRefMay) =
+                            fromMaybe (error "moving slot not in collected map, patch invariant violated")
+                              (Map.lookup weakSrcKey collected)
+
+                      (slot, isNew) <- getOrCreateSlotAndInstallMarker weakKey
+                      when (_slot_installedGeneration slot == 0 && not isNew && _movingSlot_generation movingSlot > 0) $ previouslyNeverReadySlotBecameReady
                       install weakKey slot False movingSlot
+
+                      -- update the unreadyKeyReferences map to reflect the move, so the commit handler finds the right slot. make sure to do this after install
+                      -- since install will remove the key reference from the map
+                      liftIO $ do
+                        for_ keyMayRefMay $ \ kRef -> do
+                          writeIORef kRef (Just weakKey)
+                          modifyIORef' unreadyKeyReferencesRef $ Map.insert weakKey kRef
 
                     From_Delete -> do
                       slotMay <- getSlot weakKey
@@ -395,9 +413,15 @@ adjustingBuilder (AdjustingBuilderConfig {..}) adjustBase weakenKey foldStructur
                         _adjustingBuilderConfig_deleteViewsBetween _slot_startMarker nextMarker
                         _adjustingBuilderConfig_removeMarker _slot_startMarker
                         -- make sure to decrement the never ready count if this was a slot which was never installed before it was deleted
-                        when (_slot_installedGeneration == 0) previouslyNeverReadySlotBecameReady
-                      liftIO $ modifyIORef' slotsRef (Map.delete weakKey)
-                      liftIO $ modifyIORef' unreadyKeyReferencesRef (Map.delete weakKey)
+                        when (_slot_installedGeneration == 0 && isNothing toKeyMay) previouslyNeverReadySlotBecameReady
+
+                      liftIO $ do
+                        modifyIORef' slotsRef (Map.delete weakKey)
+                        -- update the unreadyKeyReferences map to reflect the deletion, so the commit handler doesn't come in and stomp things
+                        unreadyKeyReferences <- readIORef unreadyKeyReferencesRef
+                        for_ (Map.lookup weakKey unreadyKeyReferences) $ \ kRef -> do
+                          writeIORef kRef Nothing
+                          writeIORef unreadyKeyReferencesRef $ Map.delete weakKey unreadyKeyReferences
             in foldPatchM applyUpdate () patch
 
           pure ()

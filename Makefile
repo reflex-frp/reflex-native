@@ -7,9 +7,11 @@ nix_files = default.nix $(shell find . -type f -a -name default.nix | grep -v '^
 # it's worse because at this position outside of cabal new-build it's hard to tell which package is currently being build, so we use heuristics by knowing
 # which modules hierarchies are in which packages. tl;dr:  :'(
 canonicalize_error_paths = sed \
+  -e 's,^test/,reflex-native-test/test/,g' \
   -e 's,^src/Reflex/Native/Android,reflex-native-android/src/Reflex/Native/Android,g' \
   -e 's,^src/Reflex/Native/Examples/Draggy,examples/draggy/src/Reflex/Native/Examples/Draggy,g' \
-  -e 's,^src/Reflex/Native,reflex-native/src/Reflex/Native,g'
+  -e 's,^src/Reflex/Native/Test,reflex-native-test/src/Reflex/Native/Test,g' \
+  -e 's,^src/Reflex/Native,reflex-native/src/Reflex/Native,g' \
   -e 's,^src/Reflex/UIKit,reflex-native-uikit/src/Reflex/UIKit,g'
 
 .PHONY: all clean $(platforms)

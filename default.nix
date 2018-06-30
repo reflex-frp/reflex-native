@@ -6,6 +6,7 @@ rec {
     common = haskellPackages: {
       reflex-native = haskellPackages.callCabal2nix "reflex-native" ./reflex-native {};
       reflex-native-draggy = haskellPackages.callPackage ./examples/draggy {};
+      reflex-native-test = haskellPackages.callCabal2nix "reflex-native-test" ./reflex-native-test {};
     };
 
     host = packages.common;
@@ -40,13 +41,20 @@ rec {
         rev = "f35d8882ee6a60e91a86db339bdac94710d8bc6b";
         sha256 = "1ssv0lrbbj694rficrka56l628ha9l61wrnxqxy6yn9dawk6h6n8";
       } + /rank2classes) {});
+
+      reflex = nixpkgs.haskell.lib.enableCabalFlag (self.callPackage (nixpkgs.fetchFromGitHub {
+        owner = "reflex-frp";
+        repo = "reflex";
+        rev = "9fcbf0792702f48185736cd4bebc2973f299e848";
+        sha256 = "1p5b7gp1vwhq1slhfgbdlrgk5xll431rkzg3bzq15j8k9qy4b2bc";
+      }) {}) "fast-weak";
     };
 
     host = nixpkgs.lib.composeExtensions overrides.common (self: super: packages.common self);
 
-    android = nixpkgs.lib.composeExtensions overrides.common (self: self: packages.android self);
+    android = nixpkgs.lib.composeExtensions overrides.common (self: super: packages.android self);
 
-    ios = nixpkgs.lib.composeExtensions overrides.common (self: self: packages.ios self);
+    ios = nixpkgs.lib.composeExtensions overrides.common (self: super: packages.ios self // { reflex = super.reflex.override { useTemplateHaskell = false; }; });
   };
 
   # haskellPackages for the host extended with our local overrides.
@@ -63,7 +71,7 @@ rec {
     # Shell environment for working on the cross-platform bits only, notably the test framework.
     host = (reflex-platform.workOnMulti' {
       env = ghcHost;
-      packageNames = ["reflex-native" "reflex-native-draggy"];
+      packageNames = ["reflex-native" "reflex-native-draggy" "reflex-native-test"];
     });
 
     # Shell environment for working on the Android side with Android related packages and common packages.

@@ -1,0 +1,69 @@
+name:           reflex-native-test
+version:        0.1.0.0
+synopsis:       Unit testing for reflex-native UI components
+description:    Provides a test harness and headless test view builder for testing of UI components written for Reflex Native, and includes the test suite for
+                the Reflex Native adjusting builder.
+author:         Confer Health
+maintainer:     oss@confer.health
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+homepage:       https://github.com/reflex-frp/reflex-native
+bug-reports:    https://github.com/reflex-frp/reflex-native/issues
+
+library
+  default-language: Haskell2010
+  exposed-modules:
+      Reflex.Native.Test
+      Reflex.Native.Test.Evaluation
+      Reflex.Native.Test.Optics
+      Reflex.Native.Test.Runner
+      Reflex.Native.Test.Types
+      Reflex.Native.Test.ViewBuilder
+  hs-source-dirs: src
+  ghc-options:
+      -Wall -fwarn-tabs -funbox-strict-fields -O2 -fspecialise-aggressively -ddump-simpl -ddump-to-file -dsuppress-coercions -dsuppress-idinfo
+  ghc-prof-options: -fprof-auto
+  build-depends:
+      base
+    , containers == 0.5.*
+    , dependent-map == 0.2.*
+    , dependent-sum >= 0.3 && < 0.5
+    , dlist == 0.8.*
+    , exception-transformers == 0.4.*
+    , generic-lens == 0.4.*
+    , hspec-expectations == 0.8.*
+    , lens == 4.15.*
+    , lifted-base == 0.2.*
+    , monad-control == 1.0.*
+    , mtl >= 2.1 && < 2.3
+    , primitive >= 0.5 && < 0.7
+    , rank2classes == 1.1.*
+    , ref-tf == 0.4.*
+    , reflex
+    , reflex-native
+    , stm == 2.4.*
+    , text == 1.2.*
+    , transformers >= 0.3 && < 0.6
+    , transformers-base == 0.4.*
+    , vector-space == 0.10.*
+
+test-suite TestViewBuilderSuite
+  type: exitcode-stdio-1.0
+  main-is: TestViewBuilderSuite.hs
+  hs-source-dirs: test
+  default-language: Haskell2010
+  ghc-options: -O2 -Wall -rtsopts
+  build-depends:
+      base
+    , containers == 0.5.*
+    , dependent-map == 0.2.*
+    , dependent-sum >= 0.3 && < 0.5
+    , hspec == 2.4.*
+    , hspec-expectations == 0.8.*
+    , lens == 4.15.*
+    , reflex
+    , reflex-native
+    , reflex-native-test
+    , text == 1.2.*

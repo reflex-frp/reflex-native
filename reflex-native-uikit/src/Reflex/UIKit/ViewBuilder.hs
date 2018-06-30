@@ -371,7 +371,7 @@ uikitViewBuilderConfig = AdjustingBuilderConfig {..}
       let _env_frame = BuildFrame {..}
           childEnv = Env {..}
       result <- runReaderT (unUIKitViewBuilderT child) childEnv
-      (result,) . (> 0) <$> liftIO (readIORef _buildFrame_unreadyChildren)
+      (result,) . (== 0) <$> liftIO (readIORef _buildFrame_unreadyChildren)
 
     _adjustingBuilderConfig_collectViewsBetween startObj endObj =
       withObjPtr startObj $ \ start ->

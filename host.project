@@ -1,8 +1,11 @@
 packages:
   examples/draggy/
   reflex-native/
+  reflex-native-test/
 package reflex-native
   ghc-options: -Werror
 package reflex-native-draggy
+  ghc-options: -Werror
+package reflex-native-test
   ghc-options: -Werror
 
