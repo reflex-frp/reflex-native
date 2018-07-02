@@ -47,14 +47,14 @@ rec {
         repo = "reflex";
         rev = "9fcbf0792702f48185736cd4bebc2973f299e848";
         sha256 = "1p5b7gp1vwhq1slhfgbdlrgk5xll431rkzg3bzq15j8k9qy4b2bc";
-      }) {}) "fast-weak";
+      }) { useTemplateHaskell = false; }) "fast-weak";
     };
 
     host = nixpkgs.lib.composeExtensions overrides.common (self: super: packages.common self);
 
     android = nixpkgs.lib.composeExtensions overrides.common (self: super: packages.android self);
 
-    ios = nixpkgs.lib.composeExtensions overrides.common (self: super: packages.ios self // { reflex = super.reflex.override { useTemplateHaskell = false; }; });
+    ios = nixpkgs.lib.composeExtensions overrides.common (self: super: packages.ios self);
   };
 
   # haskellPackages for the host extended with our local overrides.
