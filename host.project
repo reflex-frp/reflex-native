@@ -1,7 +1,10 @@
 packages:
   examples/draggy/
+  hs-uikit/
   reflex-native/
   reflex-native-test/
+package hs-uikit
+  ghc-options: -Werror
 package reflex-native
   ghc-options: -Werror
 package reflex-native-draggy

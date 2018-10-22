@@ -11,6 +11,6 @@ package reflex-native-draggy
   ghc-options: -Werror
 package reflex-native-uikit
   ghc-options: -Werror
-with-compiler: aarch64-apple-darwin14-ghc
-with-hc-pkg: aarch64-apple-darwin14-ghc-pkg
+with-compiler: aarch64-apple-ios-ghc
+with-hc-pkg: aarch64-apple-ios-ghc-pkg
 

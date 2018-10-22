@@ -30,24 +30,25 @@ rec {
   nixpkgs = reflex-platform.nixpkgs;
 
   # Alias to the iOS cross-building nixpkgs from reflex-platform. Useful when nix REPLing.
-  iosArm64 = reflex-platform.nixpkgsCross.ios.arm64.pkgs;
+  iosAarch64 = reflex-platform.nixpkgsCross.ios.aarch64;
 
   # What overrides we make to a haskellPackages for each platform, both external dependencies that we adjust and local packages.
   overrides = {
     common = self: super: {
-      rank2classes = nixpkgs.haskell.lib.dontCheck (self.callCabal2nix "rank2classes" (nixpkgs.fetchFromGitHub {
-        owner = "blamario";
-        repo = "grampa";
-        rev = "f35d8882ee6a60e91a86db339bdac94710d8bc6b";
-        sha256 = "1ssv0lrbbj694rficrka56l628ha9l61wrnxqxy6yn9dawk6h6n8";
-      } + /rank2classes) {});
+      generic-lens = nixpkgs.haskell.lib.dontCheck super.generic-lens;
+      # rank2classes = nixpkgs.haskell.lib.dontCheck (self.callCabal2nix "rank2classes" (nixpkgs.fetchFromGitHub {
+      #   owner = "blamario";
+      #   repo = "grampa";
+      #   rev = "f35d8882ee6a60e91a86db339bdac94710d8bc6b";
+      #   sha256 = "1ssv0lrbbj694rficrka56l628ha9l61wrnxqxy6yn9dawk6h6n8";
+      # } + /rank2classes) {});
 
-      reflex = nixpkgs.haskell.lib.enableCabalFlag (self.callPackage (nixpkgs.fetchFromGitHub {
-        owner = "reflex-frp";
-        repo = "reflex";
-        rev = "9fcbf0792702f48185736cd4bebc2973f299e848";
-        sha256 = "1p5b7gp1vwhq1slhfgbdlrgk5xll431rkzg3bzq15j8k9qy4b2bc";
-      }) { useTemplateHaskell = false; }) "fast-weak";
+      # reflex = nixpkgs.haskell.lib.enableCabalFlag (self.callPackage (nixpkgs.fetchFromGitHub {
+      #   owner = "reflex-frp";
+      #   repo = "reflex";
+      #   rev = "9fcbf0792702f48185736cd4bebc2973f299e848";
+      #   sha256 = "1p5b7gp1vwhq1slhfgbdlrgk5xll431rkzg3bzq15j8k9qy4b2bc";
+      # }) { useTemplateHaskell = false; }) "fast-weak";
     };
 
     host = nixpkgs.lib.composeExtensions overrides.common (self: super: packages.common self);
@@ -58,13 +59,13 @@ rec {
   };
 
   # haskellPackages for the host extended with our local overrides.
-  ghcHost = reflex-platform.ghc8_2_1.override { overrides = overrides.host; };
+  ghcHost = reflex-platform.ghc.override { overrides = overrides.host; };
 
   # haskellPackages for Android extended with our local overrides.
-  ghcAndroidArm64 = reflex-platform.ghcAndroidArm64.override { overrides = overrides.android; };
+  ghcAndroidAarch64 = reflex-platform.ghcAndroidAarch64.override { overrides = overrides.android; };
 
   # haskellPackages for iOS extended with our local overrides.
-  ghcIosArm64 = reflex-platform.ghcIosArm64.override { overrides = overrides.ios; };
+  ghcIosAarch64 = reflex-platform.ghcIosAarch64.override { overrides = overrides.ios; };
 
   # Shell environments for the various platforms
   shells = {
@@ -76,20 +77,20 @@ rec {
 
     # Shell environment for working on the Android side with Android related packages and common packages.
     android = (reflex-platform.workOnMulti' {
-      env = ghcAndroidArm64;
+      env = ghcAndroidAarch64;
       packageNames = ["reflex-native" "reflex-native-draggy"];
     });
 
     # Shell environment for working on the iOS side with the UIKit related packages, common packages, and any special environmental magics to get iOS cross
     # building working in a shell
     ios = (reflex-platform.workOnMulti' {
-      env = ghcIosArm64;
+      env = ghcIosAarch64;
       packageNames = ["hs-uikit" "reflex-native" "reflex-native-draggy" "reflex-native-uikit"];
 
       # special magics to get the preConfigureHook which adds the framework search paths for iOS frameworks
       # ideally this would not be necessary, and it isn't if haskellPackages generic-builder is doing the work, but since we're running cabal manually it's
       # needed
-      tools = env: [ iosArm64.buildPackages.osx_sdk ];
+      tools = env: [ iosAarch64.buildPackages.darwin.xcode_8_2 ];
     }).overrideAttrs (_: { shellHook = "runHook preConfigureHooks"; });
   };
 
@@ -98,7 +99,7 @@ rec {
     # Derivations for building iOS app examples
     ios = {
       # Derivation for building the reflex-native-draggy example as a packaged iOS app.
-      draggy = (reflex-platform.iosWithHaskellPackages ghcIosArm64).buildApp {
+      draggy = (reflex-platform.iosWithHaskellPackages ghcIosAarch64).buildApp {
         package = p: p.reflex-native-draggy;
         executableName = "reflex-native-draggy-uikit";
         bundleIdentifier = "org.reflexfrp.reflex-native-draggy";

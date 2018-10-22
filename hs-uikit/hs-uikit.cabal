@@ -37,24 +37,6 @@ library
       UIKit.UIViewController
       UIKit.UIWindow
   hs-source-dirs: src
-  c-sources:
-      cbits/GenericAppDelegate.m
-      cbits/GenericGestureRecognizerTarget.m
-      cbits/GenericView.m
-      cbits/GenericViewController.m
-      cbits/MainThread.m
-      cbits/NSMutableArrayMethods.m
-      cbits/NSStringMethods.m
-      cbits/ObjCMethods.m
-      cbits/UIAccessibilityMethods.m
-      cbits/UIColorMethods.m
-      cbits/UIFontMethods.m
-      cbits/UIGestureRecognizerMethods.m
-      cbits/UILabelMethods.m
-      cbits/UIPanGestureRecognizerMethods.m
-      cbits/UIViewControllerMethods.m
-      cbits/UIViewMethods.m
-      cbits/UIWindowMethods.m
   ghc-options:
       -Wall -fwarn-tabs -funbox-strict-fields -O2 -fspecialise-aggressively -ddump-simpl -ddump-to-file -dsuppress-coercions -dsuppress-idinfo
       -optc-Wno-expansion-to-defined -optc-Wno-nullability-inferred-on-nested-type -optc-Wno-nullability-completeness-on-arrays
@@ -68,9 +50,28 @@ library
     , monad-control == 1.0.*
     , text == 1.2.*
     , transformers-base == 0.4.*
-  frameworks:
-      CoreGraphics
-      Foundation
-      QuartzCore
-      UIKit
+  if os(ios)
+    c-sources:
+        cbits/GenericAppDelegate.m
+        cbits/GenericGestureRecognizerTarget.m
+        cbits/GenericView.m
+        cbits/GenericViewController.m
+        cbits/MainThread.m
+        cbits/NSMutableArrayMethods.m
+        cbits/NSStringMethods.m
+        cbits/ObjCMethods.m
+        cbits/UIAccessibilityMethods.m
+        cbits/UIColorMethods.m
+        cbits/UIFontMethods.m
+        cbits/UIGestureRecognizerMethods.m
+        cbits/UILabelMethods.m
+        cbits/UIPanGestureRecognizerMethods.m
+        cbits/UIViewControllerMethods.m
+        cbits/UIViewMethods.m
+        cbits/UIWindowMethods.m
+    frameworks:
+        CoreGraphics
+        Foundation
+        QuartzCore
+        UIKit
 
