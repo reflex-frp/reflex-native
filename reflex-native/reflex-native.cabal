@@ -37,12 +37,12 @@ library
     , containers == 0.5.*
     , dependent-map == 0.2.*
     , dependent-sum >= 0.3 && < 0.5
-    , generic-lens == 0.4.*
-    , lens == 4.15.*
+    , generic-lens == 1.0.*
+    , lens == 4.16.*
     , mtl >= 2.1 && < 2.3
     , rank2classes == 1.1.*
     , ref-tf == 0.4.*
     , reflex
     , text == 1.2.*
     , transformers >= 0.3 && < 0.6
-    , vector-space == 0.10.*
+    , vector-space == 0.13.*

@@ -22,8 +22,6 @@ library
       Reflex.UIKit.Style
       Reflex.UIKit.ViewBuilder
   hs-source-dirs: src
-  c-sources:
-      cbits/UIKitViewBuilder.m
   ghc-options:
       -Wall -fwarn-tabs -funbox-strict-fields -O2 -fspecialise-aggressively -ddump-simpl -ddump-to-file -dsuppress-coercions -dsuppress-idinfo
       -optc-Wno-expansion-to-defined -optc-Wno-nullability-inferred-on-nested-type -optc-Wno-nullability-completeness-on-arrays
@@ -45,4 +43,6 @@ library
     , reflex
     , reflex-native
     , transformers >= 0.3 && < 0.6
-
+  if os(ios)
+    c-sources:
+        cbits/UIKitViewBuilder.m

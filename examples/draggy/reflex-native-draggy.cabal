@@ -25,7 +25,7 @@ library
       base
     , reflex
     , reflex-native
-    , vector-space == 0.10.*
+    , vector-space == 0.13.*
   if os(ios)
     build-depends:
       reflex-native-uikit

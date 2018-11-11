@@ -32,9 +32,9 @@ library
     , dependent-sum >= 0.3 && < 0.5
     , dlist == 0.8.*
     , exception-transformers == 0.4.*
-    , generic-lens == 0.4.*
+    , generic-lens == 1.0.*
     , hspec-expectations == 0.8.*
-    , lens == 4.15.*
+    , lens == 4.16.*
     , lifted-base == 0.2.*
     , monad-control == 1.0.*
     , mtl >= 2.1 && < 2.3
@@ -47,22 +47,22 @@ library
     , text == 1.2.*
     , transformers >= 0.3 && < 0.6
     , transformers-base == 0.4.*
-    , vector-space == 0.10.*
+    , vector-space == 0.13.*
 
 test-suite TestViewBuilderSuite
   type: exitcode-stdio-1.0
   main-is: TestViewBuilderSuite.hs
   hs-source-dirs: test
   default-language: Haskell2010
-  ghc-options: -O2 -Wall -rtsopts
+  ghc-options: -O2 -Wall -rtsopts -liconv
   build-depends:
       base
     , containers == 0.5.*
     , dependent-map == 0.2.*
     , dependent-sum >= 0.3 && < 0.5
-    , hspec == 2.4.*
+    , hspec == 2.5.*
     , hspec-expectations == 0.8.*
-    , lens == 4.15.*
+    , lens == 4.16.*
     , reflex
     , reflex-native
     , reflex-native-test
